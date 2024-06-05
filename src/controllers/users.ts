@@ -92,10 +92,7 @@ export const updateUser = async (req: Request, res: Response) => {
     where: {
       id: req.user.id,
     },
-    data: {
-      ...validatedData,
-      name: validatedData.name || "",
-    },
+    data: validatedData,
   });
   res.json(updatedUser);
 };
