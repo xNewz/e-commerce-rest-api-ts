@@ -7,12 +7,11 @@ import { prismaClient } from "..";
 
 export const addItemToCart = async (req: Request, res: Response) => {
   const validatedData = CreateCartSchema.parse(req.body);
-  let product: Product;
+
+  let product;
   try {
     product = await prismaClient.product.findFirstOrThrow({
-      where: {
-        id: validatedData.productId,
-      },
+      where: { id: validatedData.productId },
     });
   } catch (err) {
     throw new NotFoundException(
@@ -20,37 +19,54 @@ export const addItemToCart = async (req: Request, res: Response) => {
       ErrorCode.PRODUCT_NOT_FOUND
     );
   }
-  const cart = await prismaClient.cartItem.create({
-    data: {
+
+  const existingCartItem = await prismaClient.cartItem.findFirst({
+    where: {
       userId: req.user.id,
-      productId: product.id,
-      quantity: validatedData.quantity,
+      productId: validatedData.productId,
     },
   });
-  res.json(cart);
+
+  let cartItem;
+  if (existingCartItem) {
+    cartItem = await prismaClient.cartItem.update({
+      where: { id: existingCartItem.id },
+      data: { quantity: existingCartItem.quantity + validatedData.quantity },
+    });
+  } else {
+    cartItem = await prismaClient.cartItem.create({
+      data: {
+        userId: req.user.id,
+        productId: validatedData.productId,
+        quantity: validatedData.quantity,
+      },
+    });
+  }
+
+  res.json(cartItem);
 };
 
 export const deleteItemFromCart = async (req: Request, res: Response) => {
-    const cartItem = await prismaClient.cartItem.findFirst({
-      where: {
-        id: +req.params.id,
-        userId: req.user.id,
-      },
-    });
+  const cartItem = await prismaClient.cartItem.findFirst({
+    where: {
+      id: +req.params.id,
+      userId: req.user.id,
+    },
+  });
 
-    if (!cartItem) {
-      throw new NotFoundException(
-        "Cart item not found",
-        ErrorCode.CART_ITEM_NOT_FOUND
-      );
-    }
-  
-    await prismaClient.cartItem.delete({
-      where: { id: +req.params.id },
-    });
-  
-    res.json({ success: true });
-  };
+  if (!cartItem) {
+    throw new NotFoundException(
+      "Cart item not found",
+      ErrorCode.CART_ITEM_NOT_FOUND
+    );
+  }
+
+  await prismaClient.cartItem.delete({
+    where: { id: +req.params.id },
+  });
+
+  res.json({ success: true });
+};
 
 export const changeQuantity = async (req: Request, res: Response) => {};
 
