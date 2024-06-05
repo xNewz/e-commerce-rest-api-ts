@@ -2,7 +2,12 @@ import { Router } from "express";
 import { errorHandler } from "../error-handler";
 import authMiddleware from "../middlewares/auth";
 import adminMiddleware from "../middlewares/admin";
-import { addAddress, deleteAddress, listAddress } from "../controllers/users";
+import {
+  addAddress,
+  deleteAddress,
+  listAddress,
+  updateUser,
+} from "../controllers/users";
 
 const usersRoutes: Router = Router();
 
@@ -13,5 +18,6 @@ usersRoutes.delete(
   errorHandler(deleteAddress)
 );
 usersRoutes.get("/address", [authMiddleware], errorHandler(listAddress));
+usersRoutes.put("/", [authMiddleware], errorHandler(updateUser));
 
 export default usersRoutes;
