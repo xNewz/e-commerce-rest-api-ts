@@ -31,50 +31,26 @@ export const addItemToCart = async (req: Request, res: Response) => {
 };
 
 export const deleteItemFromCart = async (req: Request, res: Response) => {
-  const cartItem = await prismaClient.cartItem.findFirst({
+  await prismaClient.cartItem.delete({
     where: {
       id: +req.params.id,
-      userId: req.user.id,
     },
   });
-
-  if (!cartItem) {
-    throw new NotFoundException(
-      "Cart item not found",
-      ErrorCode.CART_ITEM_NOT_FOUND
-    );
-  }
-
-  await prismaClient.cartItem.delete({
-    where: { id: +req.params.id },
-  });
-
   res.json({ success: true });
 };
 
 export const changeQuantity = async (req: Request, res: Response) => {
   const validatedData = ChangeQuantitySchema.parse(req.body);
-
-  const cartItem = await prismaClient.cartItem.findFirst({
+  const updatedCart = await prismaClient.cartItem.update({
     where: {
       id: +req.params.id,
-      userId: req.user.id,
+    },
+    data: {
+      quantity: validatedData.quantity,
     },
   });
 
-  if (!cartItem) {
-    throw new NotFoundException(
-      "Cart item not found",
-      ErrorCode.CART_ITEM_NOT_FOUND
-    );
-  }
-
-  const updatedCartItem = await prismaClient.cartItem.update({
-    where: { id: +req.params.id },
-    data: { quantity: validatedData.quantity },
-  });
-
-  res.json(updatedCartItem);
+  res.json(updatedCart);
 };
 
 export const getCart = async (req: Request, res: Response) => {
