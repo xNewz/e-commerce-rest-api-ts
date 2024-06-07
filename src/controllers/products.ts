@@ -82,3 +82,35 @@ export const getByProductId = async (req: Request, res: Response) => {
     );
   }
 };
+
+export const searchProduct = async (req: Request, res: Response) => {
+  const searchTerm = req.query.q?.toString() || "";
+  const skip = parseInt(req.query.skip?.toString() || "0");
+  const take = parseInt(req.query.take?.toString() || "10");
+
+  const products = await prismaClient.product.findMany({
+    where: {
+      OR: [
+        {
+          name: {
+            contains: searchTerm,
+          },
+        },
+        {
+          description: {
+            contains: searchTerm,
+          },
+        },
+        {
+          tags: {
+            contains: searchTerm,
+          },
+        },
+      ],
+    },
+    skip: skip,
+    take: take,
+  });
+
+  res.json(products);
+};
